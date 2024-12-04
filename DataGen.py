@@ -1,3 +1,5 @@
+# DataGen.py
+
 def dbGen(cursor, pydb, randint, date, timedelta, datetime):
     try:
         professors = []

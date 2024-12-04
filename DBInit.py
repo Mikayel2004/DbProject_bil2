@@ -1,6 +1,7 @@
+# DBInit.py
+
 def initDb(psycopg2, sql, host, port, admin_user, admin_password, db_name, db_owner):
     try:
-        # Step 1: Connect to PostgreSQL as admin with autocommit enabled
         print("Connecting to PostgreSQL as admin...")
         admin_conn = psycopg2.connect(
             host=host,
@@ -9,18 +10,16 @@ def initDb(psycopg2, sql, host, port, admin_user, admin_password, db_name, db_ow
             password=admin_password,
             dbname="postgres"
         )
-        admin_conn.autocommit = True  # Ensure autocommit is enabled
+        admin_conn.autocommit = True
         print("Autocommit status:", admin_conn.autocommit)
 
         with admin_conn.cursor() as admin_cursor:
-            # Check if the database already exists
             print(f"Checking if database '{db_name}' exists...")
             admin_cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s;", (db_name,))
             db_exists = admin_cursor.fetchone()
             if db_exists:
                 print(f"Database '{db_name}' already exists. Skipping creation.")
             else:
-                # Create the database and set its owner
                 print(f"Creating database '{db_name}' with owner '{db_owner}'...")
                 admin_cursor.execute(
                     sql.SQL("CREATE DATABASE {db_name} OWNER {owner}")
@@ -32,17 +31,15 @@ def initDb(psycopg2, sql, host, port, admin_user, admin_password, db_name, db_ow
                 print(f"Database '{db_name}' successfully created.")
         admin_conn.close()
 
-        # Step 2: Connect to the new database to initialize tables
         print(f"Connecting to the new database '{db_name}' to initialize tables...")
         with psycopg2.connect(
             host=host,
             port=port,
-            user=db_owner,  # Use the owner credentials
-            password=admin_password,  # Assuming db_owner uses the same password as admin
+            user=db_owner,
+            password=admin_password,
             dbname=db_name
         ) as db_conn:
             with db_conn.cursor() as cursor:
-                # Create tables
                 print("Creating tables...")
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS professor (
